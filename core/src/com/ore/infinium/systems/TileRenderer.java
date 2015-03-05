@@ -121,8 +121,8 @@ public class TileRenderer extends IntervalSystem {
         //       float halfScreenMetersWidth = (1600f * 0.5f) / (World.PIXELS_PER_METER);
         final int startColumn = Math.max(tilesBeforeX - (tilesInView) - 2, 0);
         final int startRow = Math.max(tilesBeforeY - (tilesInView) - 2, 0);
-        final int endColumn = Math.min(tilesBeforeX + (tilesInView) + 2, World.WORLD_COLUMNCOUNT);
-        final int endRow = Math.min(tilesBeforeY + (tilesInView) + 2, World.WORLD_ROWCOUNT);
+        final int endColumn = Math.min(tilesBeforeX + (tilesInView) + 2, World.WORLD_WIDTH);
+        final int endRow = Math.min(tilesBeforeY + (tilesInView) + 2, World.WORLD_HEIGHT);
       /*
       if (Math.abs(startColumn) != startColumn) {
           //qCDebug(ORE_TILE_RENDERER) << "FIXME, WENT INTO NEGATIVE COLUMN!!";
@@ -139,7 +139,7 @@ public class TileRenderer extends IntervalSystem {
         String textureName = "";
         for (int x = startColumn; x < endColumn; ++x) {
             for (int y = startRow; y < endRow; ++y) {
-                int blockIndex = x * World.WORLD_ROWCOUNT + y;
+                int blockIndex = x * World.WORLD_HEIGHT + y;
 
                 Block block = m_world.blockAt(x, y);
 

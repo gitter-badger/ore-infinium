@@ -8,7 +8,11 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
@@ -18,6 +22,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.ore.infinium.components.*;
 import com.ore.infinium.systems.*;
+import com.sudoplay.joise.module.*;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -49,8 +54,9 @@ public class World implements Disposable {
     public static final float BLOCK_SIZE = (16.0f / PIXELS_PER_METER);
     public static final float BLOCK_SIZE_PIXELS = 16.0f;
 
-    public static final int WORLD_COLUMNCOUNT = 1000; //2400
-    public static final int WORLD_ROWCOUNT = 1000; //8400
+    //terraria largest map size is (8400, 2400), so shoot for AT LEAST that.
+    public static final int WORLD_WIDTH = 1000; //8400
+    public static final int WORLD_HEIGHT = 1000; //2400
     public static final int WORLD_SEA_LEVEL = 50;
 
     /**
@@ -87,7 +93,8 @@ public class World implements Disposable {
     }
 
     static {
-        dirtTransitionTypes.put(EnumSet.of(Transitions.left, Transitions.right, Transitions.top, Transitions.bottom), 0);
+        dirtTransitionTypes.put(EnumSet.of(Transitions.left, Transitions.right, Transitions.top, Transitions.bottom),
+                0);
         dirtTransitionTypes.put(EnumSet.of(Transitions.bottom), 1);
         dirtTransitionTypes.put(EnumSet.of(Transitions.top, Transitions.bottom), 2);
         dirtTransitionTypes.put(EnumSet.of(Transitions.right), 3);
@@ -138,7 +145,8 @@ public class World implements Disposable {
         ////////////////////
 
 
-        stoneTransitionTypes.put(EnumSet.of(Transitions.left, Transitions.right, Transitions.top, Transitions.bottom), 0);
+        stoneTransitionTypes.put(EnumSet.of(Transitions.left, Transitions.right, Transitions.top, Transitions.bottom),
+                0);
         stoneTransitionTypes.put(EnumSet.of(Transitions.right, Transitions.bottom), 1);
         stoneTransitionTypes.put(EnumSet.of(Transitions.left, Transitions.right), 2);
         stoneTransitionTypes.put(EnumSet.of(Transitions.left, Transitions.bottom), 3);
@@ -153,7 +161,9 @@ public class World implements Disposable {
         stoneTransitionTypes.put(EnumSet.of(Transitions.left, Transitions.right), 12);
         stoneTransitionTypes.put(EnumSet.of(Transitions.left), 13);
         stoneTransitionTypes.put(EnumSet.of(Transitions.top), 14);
-        stoneTransitionTypes.put(EnumSet.of(Transitions.LeftDirt, Transitions.RightDirt, Transitions.BottomDirt, Transitions.TopDirt), 15);
+        stoneTransitionTypes.put(
+                EnumSet.of(Transitions.LeftDirt, Transitions.RightDirt, Transitions.BottomDirt, Transitions.TopDirt),
+                15);
         stoneTransitionTypes.put(EnumSet.of(Transitions.bottom, Transitions.right), 16);
         stoneTransitionTypes.put(EnumSet.of(Transitions.left, Transitions.bottom, Transitions.right), 17);
         stoneTransitionTypes.put(EnumSet.of(Transitions.left, Transitions.bottom), 18);
@@ -197,7 +207,8 @@ public class World implements Disposable {
     private ComponentMapper<VelocityComponent> velocityMapper = ComponentMapper.getFor(VelocityComponent.class);
     private ComponentMapper<JumpComponent> jumpMapper = ComponentMapper.getFor(JumpComponent.class);
     private ComponentMapper<BlockComponent> blockMapper = ComponentMapper.getFor(BlockComponent.class);
-    private ComponentMapper<AirGeneratorComponent> airGeneratorMapper = ComponentMapper.getFor(AirGeneratorComponent.class);
+    private ComponentMapper<AirGeneratorComponent> airGeneratorMapper = ComponentMapper.getFor(
+            AirGeneratorComponent.class);
     private ComponentMapper<ToolComponent> toolMapper = ComponentMapper.getFor(ToolComponent.class);
     private ComponentMapper<AirComponent> airMapper = ComponentMapper.getFor(AirComponent.class);
     private ComponentMapper<TagComponent> tagMapper = ComponentMapper.getFor(TagComponent.class);
@@ -220,7 +231,7 @@ public class World implements Disposable {
             float h = Gdx.graphics.getHeight();
         }
 
-        blocks = new Block[WORLD_ROWCOUNT * WORLD_COLUMNCOUNT];
+        blocks = new Block[WORLD_HEIGHT * WORLD_WIDTH];
 
 //        assetManager = new AssetManager();
 //        TextureAtlas m_blockAtlas = assetManager.get("data/", TextureAtlas.class);
@@ -231,7 +242,8 @@ public class World implements Disposable {
         engine.addSystem(m_powerCircuitSystem = new PowerCircuitSystem(this));
         engine.addSystem(new PlayerSystem(this));
 
-        m_camera = new OrthographicCamera(1600 / World.PIXELS_PER_METER, 900 / World.PIXELS_PER_METER);//30, 30 * (h / w));
+        m_camera = new OrthographicCamera(1600 / World.PIXELS_PER_METER,
+                900 / World.PIXELS_PER_METER);//30, 30 * (h / w));
         m_camera.setToOrtho(true, 1600 / World.PIXELS_PER_METER, 900 / World.PIXELS_PER_METER);
 
 //        m_camera.position.set(m_camera.viewportWidth / 2f, m_camera.viewportHeight / 2f, 0);
@@ -329,7 +341,8 @@ public class World implements Disposable {
         playerComponent.noClip = m_noClipEnabled;
 
         playerComponent.playerName = playerName;
-        playerComponent.loadedViewport.setRect(new Rectangle(0, 0, LoadedViewport.MAX_VIEWPORT_WIDTH, LoadedViewport.MAX_VIEWPORT_HEIGHT));
+        playerComponent.loadedViewport.setRect(
+                new Rectangle(0, 0, LoadedViewport.MAX_VIEWPORT_WIDTH, LoadedViewport.MAX_VIEWPORT_HEIGHT));
         playerComponent.loadedViewport.centerOn(new Vector2(playerSprite.sprite.getX(), playerSprite.sprite.getY()));
         player.add(playerComponent);
 
@@ -352,14 +365,14 @@ public class World implements Disposable {
     }
 
     private void generateWorld() {
-        generateOres();
+        generateMap(WORLD_WIDTH, WORLD_HEIGHT);
         transitionTiles();
     }
 
     private void transitionTiles() {
-        for (int x = 0; x < WORLD_COLUMNCOUNT; ++x) {
-            for (int y = 0; y < WORLD_ROWCOUNT; ++y) {
-                int index = x * WORLD_ROWCOUNT + y;
+        for (int x = 0; x < WORLD_WIDTH; ++x) {
+            for (int y = 0; y < WORLD_HEIGHT; ++y) {
+                int index = x * WORLD_HEIGHT + y;
 
                 if (blocks[index].blockType == Block.BlockType.DirtBlockType) {
                     if (blocks[index].hasFlag(Block.BlockFlags.SunlightVisibleBlock)) {
@@ -382,7 +395,7 @@ public class World implements Disposable {
     }
 
     private void transitionStoneTile(int x, int y) {
-        int index = x * WORLD_ROWCOUNT + y;
+        int index = x * WORLD_HEIGHT + y;
         //essentially, if the *other* tiles in question are the same blocks, we should
         //merge/transition with them.
 
@@ -415,7 +428,7 @@ public class World implements Disposable {
     }
 
     private void transitionDirtTile(int x, int y) {
-        int index = x * WORLD_ROWCOUNT + y;
+        int index = x * WORLD_HEIGHT + y;
         //essentially, if the *other* tiles in question are the same blocks, we should
         //merge/transition with them.
 
@@ -459,8 +472,8 @@ public class World implements Disposable {
      */
     private boolean shouldTileTransitionWith(int sourceTileX, int sourceTileY, int nearbyTileX, int nearbyTileY) {
         boolean isMatched = false;
-        int srcIndex = MathUtils.clamp(sourceTileX * WORLD_ROWCOUNT + sourceTileY, 0, WORLD_ROWCOUNT * WORLD_COLUMNCOUNT - 1);
-        int nearbyIndex = MathUtils.clamp(nearbyTileX * WORLD_ROWCOUNT + nearbyTileY, 0, WORLD_ROWCOUNT * WORLD_COLUMNCOUNT - 1);
+        int srcIndex = MathUtils.clamp(sourceTileX * WORLD_HEIGHT + sourceTileY, 0, WORLD_HEIGHT * WORLD_WIDTH - 1);
+        int nearbyIndex = MathUtils.clamp(nearbyTileX * WORLD_HEIGHT + nearbyTileY, 0, WORLD_HEIGHT * WORLD_WIDTH - 1);
 
         if (blocks[srcIndex].blockType == blocks[nearbyIndex].blockType) {
             //todo in the future look up if it blends or not based on various thingies. not jsut "is tile same"
@@ -472,21 +485,22 @@ public class World implements Disposable {
     }
 
     private void initializeWorld() {
-        for (int x = 0; x < WORLD_COLUMNCOUNT; ++x) {
-            for (int y = 0; y < WORLD_ROWCOUNT; ++y) {
+        for (int x = 0; x < WORLD_WIDTH; ++x) {
+            for (int y = 0; y < WORLD_HEIGHT; ++y) {
 
-                int index = x * WORLD_ROWCOUNT + y;
+                int index = x * WORLD_HEIGHT + y;
                 blocks[index] = new Block();
                 blocks[index].blockType = Block.BlockType.NullBlockType;
             }
         }
     }
 
-    private void generateOres() {
-        for (int x = 0; x < WORLD_COLUMNCOUNT; ++x) {
-            for (int y = 0; y < WORLD_ROWCOUNT; ++y) {
+    private void generateMap(int width, int height) {
+        /*
+        for (int x = 0; x < WORLD_WIDTH; ++x) {
+            for (int y = 0; y < WORLD_HEIGHT; ++y) {
 
-                int index = x * WORLD_ROWCOUNT + y;
+                int index = x * WORLD_HEIGHT + y;
 
                 //java wants me to go through each and every block and initialize them..
                 blocks[index] = new Block();
@@ -514,12 +528,147 @@ public class World implements Disposable {
 //                blocks[dragSourceIndex].wallType = Block::Wall
             }
         }
-//        for (int x = 0; x < WORLD_COLUMNCOUNT; ++x) {
-//            for (int y = seaLevel(); y < WORLD_ROWCOUNT; ++y) {
+       */
+//        for (int x = 0; x < WORLD_WIDTH; ++x) {
+//            for (int y = seaLevel(); y < WORLD_HEIGHT; ++y) {
 //                Block block = blockAt(x, y);
 //                block.blockType = Block.BlockType.DirtBlockType;
 //            }
 //        }
+
+        int seed = 422344882;
+
+        width = 1000; //8400
+        height = 1000; //2400
+
+        final float SCALE = 1f;
+        float px, py;
+
+        final int Open = 1;
+        final int Dirt = 2;
+        final int Stone = 3;
+        final int SemiRare = 4;
+        final int Rare = 5;
+        final int Bedrock = 6;
+
+        final int Constant1 = 1;
+        final int Constant0 = 0;
+
+        final double SEMIRARE_DENSITY = 0.6;
+        final double RARE_DENSITY = 0.0009;
+        final double RARE_GRADIENT_SCALE = 1.;
+
+        /////////////////////////////////////////////////////
+
+        ModuleGradient mainGradient = new ModuleGradient();
+        mainGradient.setGradient(0, 0, 0, 0.5);
+
+        ModuleScaleOffset mainGradientRemap = new ModuleScaleOffset();
+        mainGradientRemap.setSource(mainGradient);
+        mainGradientRemap.setScale(0.5);
+        mainGradientRemap.setOffset(0.5);
+
+        ModuleFractal semiRareFBM = new ModuleFractal(ModuleFractal.FractalType.FBM,
+                ModuleBasisFunction.BasisType.GRADIENT,
+                ModuleBasisFunction.InterpolationType.QUINTIC);
+        semiRareFBM.setSeed(seed);
+        semiRareFBM.setNumOctaves(4);
+        semiRareFBM.setFrequency(2);
+
+        ModuleScaleOffset semiRareFBMRemap = new ModuleScaleOffset();
+        semiRareFBMRemap.setSource(semiRareFBM);
+        semiRareFBMRemap.setScale(0.5);
+        semiRareFBMRemap.setOffset(0.5);
+
+        ModuleSelect semiRareSelect = new ModuleSelect();
+        semiRareSelect.setControlSource(semiRareFBMRemap);
+        semiRareSelect.setLowSource(SemiRare);
+        semiRareSelect.setHighSource(Stone);
+        semiRareSelect.setThreshold(SEMIRARE_DENSITY);
+        semiRareSelect.setFalloff(0);
+
+        ///////////////////////////////////////////////////////////////////////
+
+        ModuleFractal rareFBM = new ModuleFractal(ModuleFractal.FractalType.FBM, ModuleBasisFunction.BasisType.GRADIENT,
+                ModuleBasisFunction.InterpolationType.QUINTIC);
+        rareFBM.setSeed(seed);
+        rareFBM.setNumOctaves(3);
+        rareFBM.setFrequency(3);
+
+        ModuleScaleOffset rareFBMRemap = new ModuleScaleOffset();
+        rareFBMRemap.setSource(rareFBM);
+        rareFBMRemap.setScale(0.5);
+        rareFBMRemap.setOffset(0.5);
+
+        ModuleScaleOffset rareFBMScale = new ModuleScaleOffset();
+        rareFBMRemap.setSource(rareFBMRemap);
+        rareFBMRemap.setScale(RARE_GRADIENT_SCALE);
+        rareFBMRemap.setOffset(0);
+
+        ModuleCombiner rareMult = new ModuleCombiner(ModuleCombiner.CombinerType.MULT);
+        rareMult.setSource(0, rareFBMScale);
+        rareMult.setSource(1, mainGradientRemap);
+
+        ModuleScaleOffset rareMultScale = new ModuleScaleOffset();
+        rareFBMRemap.setSource(rareMult);
+        rareFBMRemap.setScale(RARE_DENSITY);
+        rareFBMRemap.setOffset(0.0);
+
+        ModuleSelect rareSelect = new ModuleSelect();
+        rareSelect.setControlSource(rareMultScale);
+        rareSelect.setLowSource(semiRareSelect);
+        rareSelect.setHighSource(Rare);
+        rareSelect.setThreshold(0.5);
+        rareSelect.setFalloff(0);
+
+        Module finalGen = rareSelect;
+
+        Color color;
+
+        Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
+
+        FileHandle fh = new FileHandle("/home/sreich/shit.png");
+
+        for (int x = 0; x < width; ++x) {
+            for (int y = 0; y < height; ++y) {
+                px = x / (float) width * SCALE;
+                py = y / (float) height * SCALE;
+//
+//                r = (float) finalGen.get(px, py);
+//                r = Math.max(0, Math.min(1, r));
+
+                double result = finalGen.get(px, py);
+
+
+                switch ((int) result) {
+                    case SemiRare:
+                        color = Color.ORANGE;
+                        break;
+
+                    case Stone:
+                        color = Color.GRAY;
+                        break;
+
+                    case Rare:
+                        color = Color.BLUE;
+                        break;
+
+                    default:
+                        color = Color.MAGENTA;
+                }
+
+                pixmap.drawPixel(x, y, Color.rgba8888(color));
+            }
+        }
+
+        PixmapIO.writePNG(fh, pixmap);
+
+        //       try {
+//            ImageIO.write(image, "png", new File("/home/sreich/shit.png"));
+        //       } catch (IOException e) {
+        //           e.printStackTrace();
+        //       }
+        System.exit(0);
     }
 
     public boolean isServer() {
@@ -531,8 +680,8 @@ public class World implements Disposable {
     }
 
     public Block blockAtPosition(Vector2 pos) {
-        int x = MathUtils.clamp((int) (pos.x / BLOCK_SIZE), 0, WORLD_COLUMNCOUNT - 1);
-        int y = MathUtils.clamp((int) (pos.y / BLOCK_SIZE), 0, WORLD_ROWCOUNT - 1);
+        int x = MathUtils.clamp((int) (pos.x / BLOCK_SIZE), 0, WORLD_WIDTH - 1);
+        int y = MathUtils.clamp((int) (pos.y / BLOCK_SIZE), 0, WORLD_HEIGHT - 1);
         return blockAt(x, y);
     }
 
@@ -544,13 +693,13 @@ public class World implements Disposable {
      * @return
      */
     public Block blockAtSafely(int x, int y) {
-        return blocks[MathUtils.clamp(x, 0, WORLD_COLUMNCOUNT - 1) * WORLD_ROWCOUNT + MathUtils.clamp(y, 0, WORLD_ROWCOUNT - 1)];
+        return blocks[MathUtils.clamp(x, 0, WORLD_WIDTH - 1) * WORLD_HEIGHT + MathUtils.clamp(y, 0, WORLD_HEIGHT - 1)];
     }
 
     public Block blockAt(int x, int y) {
-        assert x >= 0 && y >= 0 && x <= WORLD_COLUMNCOUNT && y <= WORLD_ROWCOUNT : "block index out of range";
+        assert x >= 0 && y >= 0 && x <= WORLD_WIDTH && y <= WORLD_HEIGHT : "block index out of range";
 
-        return blocks[x * WORLD_ROWCOUNT + y];
+        return blocks[x * WORLD_HEIGHT + y];
     }
 
     public boolean isBlockSolid(int x, int y) {
@@ -726,9 +875,9 @@ public class World implements Disposable {
     }
 
     private void computeSunlight() {
-        for (int x = 0; x < WORLD_COLUMNCOUNT; ++x) {
+        for (int x = 0; x < WORLD_WIDTH; ++x) {
 
-            for (int y = 0; y < WORLD_ROWCOUNT; ++y) {
+            for (int y = 0; y < WORLD_HEIGHT; ++y) {
 
                 Block leftBlock = blockAtSafely(x - 1, y);
                 Block rightBlock = blockAtSafely(x + 1, y);
@@ -773,7 +922,7 @@ public class World implements Disposable {
                         assert false : "invalid mesh type retrieval, for some reason";
                     }
 
-                    y = WORLD_ROWCOUNT;
+                    y = WORLD_HEIGHT;
                 } else {
                     //skip to next column, no more grass transitions possible in this area
 //                        ++x;
@@ -787,8 +936,8 @@ public class World implements Disposable {
     /*
     private boolean shouldGrassMesh(int sourceTileX, int sourceTileY, int nearbyTileX, int nearbyTileY) {
         boolean isMatched = false;
-        int srcIndex = MathUtils.clamp(sourceTileX * WORLD_ROWCOUNT + sourceTileY, 0, WORLD_ROWCOUNT * WORLD_COLUMNCOUNT - 1);
-        int nearbyIndex = MathUtils.clamp(nearbyTileX * WORLD_ROWCOUNT + nearbyTileY, 0, WORLD_ROWCOUNT * WORLD_COLUMNCOUNT - 1);
+        int srcIndex = MathUtils.clamp(sourceTileX * WORLD_HEIGHT + sourceTileY, 0, WORLD_HEIGHT * WORLD_WIDTH - 1);
+        int nearbyIndex = MathUtils.clamp(nearbyTileX * WORLD_HEIGHT + nearbyTileY, 0, WORLD_HEIGHT * WORLD_WIDTH - 1);
 
         if (blocks[srcIndex].blockType == blocks[nearbyIndex].blockType) {
             //todo in the future look up if it blends or not based on various thingies. not jsut "is tile same"
@@ -807,9 +956,11 @@ public class World implements Disposable {
         SpriteComponent spriteComponent = spriteMapper.get(m_blockPickingCrosshair);
 
         Vector2 mouse = mousePositionWorldCoords();
-        Vector2 crosshairPosition = new Vector2(BLOCK_SIZE * MathUtils.floor(mouse.x / BLOCK_SIZE), BLOCK_SIZE * MathUtils.floor(mouse.y / BLOCK_SIZE));
+        Vector2 crosshairPosition = new Vector2(BLOCK_SIZE * MathUtils.floor(mouse.x / BLOCK_SIZE),
+                BLOCK_SIZE * MathUtils.floor(mouse.y / BLOCK_SIZE));
 
-        Vector2 crosshairOriginOffset = new Vector2(spriteComponent.sprite.getWidth() * 0.5f, spriteComponent.sprite.getHeight() * 0.5f);
+        Vector2 crosshairOriginOffset = new Vector2(spriteComponent.sprite.getWidth() * 0.5f,
+                spriteComponent.sprite.getHeight() * 0.5f);
 
         Vector2 crosshairFinalPosition = crosshairPosition.add(crosshairOriginOffset);
 
@@ -901,7 +1052,7 @@ public class World implements Disposable {
         int endX = (int) ((pos.x + (size.x * 0.5f)) / BLOCK_SIZE + 0);
         int endY = (int) ((pos.y + (size.y * 0.5f - epsilon)) / BLOCK_SIZE + 1);
 
-        if (!(startX >= 0 && startY >= 0 && endX <= WORLD_COLUMNCOUNT && endY <= WORLD_ROWCOUNT)) {
+        if (!(startX >= 0 && startY >= 0 && endX <= WORLD_WIDTH && endY <= WORLD_HEIGHT)) {
             //fixme
             //not sure why, but this ends up giving me some way way invalid values. likely due to mouse being outside
             //of valid range, *somehow*. sometimes does it on startup etc
@@ -918,8 +1069,8 @@ public class World implements Disposable {
 
         //float x = Math.min(pos.x - (BLOCK_SIZE * 20), 0.0f);
         //float y = Math.min(pos.y - (BLOCK_SIZE * 20), 0.0f);
-        //float x2 = Math.min(pos.x + (BLOCK_SIZE * 20), WORLD_COLUMNCOUNT * BLOCK_SIZE);
-        //float y2 = Math.min(pos.y + (BLOCK_SIZE * 20), WORLD_ROWCOUNT * BLOCK_SIZE);
+        //float x2 = Math.min(pos.x + (BLOCK_SIZE * 20), WORLD_WIDTH * BLOCK_SIZE);
+        //float y2 = Math.min(pos.y + (BLOCK_SIZE * 20), WORLD_HEIGHT * BLOCK_SIZE);
 
         ImmutableArray<Entity> entities = engine.getEntitiesFor(Family.all(SpriteComponent.class).get());
         for (int i = 0; i < entities.size(); ++i) {
@@ -989,7 +1140,7 @@ public class World implements Disposable {
         int sourceIndex = 0;
         for (int row = region.y; row < region.y2; ++row) {
             for (int col = region.x; col < region.x2; ++col) {
-                int index = col * WORLD_ROWCOUNT + row;
+                int index = col * WORLD_HEIGHT + row;
 
                 Block origBlock = blocks[index];
                 Network.SingleBlock srcBlock = region.blocks.get(sourceIndex);
